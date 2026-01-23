@@ -34,6 +34,8 @@ Identify 3 "wide-spanning" and "deep" questions about the requirements.
 
 **Do not proceed to write the plan until the user has answered these questions.**
 
+**STOP:** You MUST use `notify_user` to ask these questions. You MUST **NOT** generate the plan in the same turn. Wait for the user's response.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
