@@ -613,6 +613,8 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Code inline OR link to separate file
 - [ ] One excellent example (not multi-language)
 - [ ] **LANGUAGE RULE:** `SKILL.md` MUST be in English. If you need other languages (e.g., Chinese), create a separate `<filename>.zh.md` file.
+- [ ] **SYNC RULE:** Ensure that any update to `SKILL.md` is immediately reflected in `SKILL.zh.md` (and vice versa) to keep them in sync.
+- [ ] **REQUIREMENT ANALYSIS:** Before designing the skill, identify 3 "wide-spanning" and "deep" questions about the skill's requirements and users. Do not proceed until these are answered.
 - [ ] Run scenarios WITH skill - verify agents now comply
 
 **REFACTOR Phase - Close Loopholes:**
