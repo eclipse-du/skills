@@ -21,6 +21,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Before writing the plan, you MUST pause and ask:**
 
+**LANGUAGE RULE:** You MUST ask these questions in **CHINESE**, regardless of the user's input language.
+
 Identify 3 "wide-spanning" and "deep" questions about the requirements.
 - **Wide-spanning:** Covers different aspects (e.g., edge cases vs. performance vs. user experience).
 - **Deep:** Goes beyond surface level (e.g., asking about specific failure modes rather than just "error handling").
