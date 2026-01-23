@@ -17,6 +17,21 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
+## Requirement Analysis
+
+**Before writing the plan, you MUST pause and ask:**
+
+Identify 3 "wide-spanning" and "deep" questions about the requirements.
+- **Wide-spanning:** Covers different aspects (e.g., edge cases vs. performance vs. user experience).
+- **Deep:** Goes beyond surface level (e.g., asking about specific failure modes rather than just "error handling").
+
+**Example:**
+1. "How should the system behave if the third-party API returns a 429 Rate Limit error during a bulk operation? Should we implement exponential backoff or fail immediately?"
+2. "For the data visualization, do we need to support real-time updates via WebSockets, or is a polling mechanism sufficient for this version?"
+3. "Are there any specific accessibility compliance standards (like WCAG 2.1 AA) we need to adhere to for the new UI components?"
+
+**Do not proceed to write the plan until the user has answered these questions.**
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
