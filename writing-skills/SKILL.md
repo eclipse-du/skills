@@ -614,7 +614,7 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] One excellent example (not multi-language)
 - [ ] **LANGUAGE RULE:** `SKILL.md` MUST be in English.
 - [ ] **REQUIRED SUB-SKILL:** Use `bilingual_docs` skill to automatically create/update the Chinese version (`SKILL.zh.md`) and ensure it is kept in sync.
-- [ ] **REQUIREMENT ANALYSIS:** Before designing the skill, identify 3 "wide-spanning" and "deep" questions about the skill's requirements and users. **These questions MUST be asked in CHINESE**. **STOP**: Use `notify_user` to ask these questions. Do NOT proceed until the user answers.
+- [ ] **REQUIREMENT ANALYSIS:** Before designing the skill, identify **UP TO 3** "wide-spanning" and "deep" questions about the skill's requirements and users. **These questions MUST be asked in CHINESE**. **Iterate** until clear. **STOP**: Use `notify_user` to ask these questions. Do NOT proceed until the user answers.
 - [ ] Run scenarios WITH skill - verify agents now comply
 
 **REFACTOR Phase - Close Loopholes:**
