@@ -1,6 +1,6 @@
 ---
 name: my-notion-writer
-description: Use when you need to record a quick thought, save a quote, or write a detailed book/paper note to Notion (e.g., to "毒鸡汤" or "论文库")
+description: Use when you need to record a quick thought, save a quote, write a detailed book/paper note, or log a theory/model note to Notion (e.g., to "毒鸡汤", "论文库", or "理论集合")
 ---
 
 # My Notion Writer
@@ -12,6 +12,7 @@ This skill centralizes and automates writing structured content to specific Noti
 
 - When the user says "记录一个蛋疼的话", "存一句名人名言" → Route to **Resource/毒鸡汤**
 - When the user says "帮我写个论文笔记", "整理这篇paper" → Route to **Area/论文库**
+- When the user says "记一个理论笔记", "存个模型笔记", "整理XX理论" → Route to **理论集合**
 - *Do not use this* for general search or non-predefined Notion targets unless the user explicitly asks to add a new category to this skill's cache.
 
 ## Working with the Cache
@@ -31,6 +32,11 @@ destinations:
     id: "724156ee-789d-4c26-b227-005d6d80f9ce"
     name: "Area/论文库"
     format: "A structured page within the database using predefined headings (🎯 核心观点, 🔔 思考心得, etc.)."
+  "理论笔记/模型笔记":
+    target_type: "database"
+    id: "cd06b084-edac-42a4-856a-e085171219d2"
+    name: "理论集合"
+    format: "A new page in the database with properties only (Name, Tags, 释义, 思考, 实操, 🐂🍺🈯️). No page body content needed."
 ```
 
 ### Expanding the Cache
@@ -39,6 +45,8 @@ If the user asks to add a new destination (e.g., "以后我的反思都存到 X 
 ## Content Formatting Templates
 
 **GLOBAL RULE:** All notes written to Notion MUST be in Chinese, even if the source material is in English, unless the user explicitly requests another language. Do not attempt to upload images to Notion; simply skip any images.
+
+**GLOBAL TITLE RULE:** ALL `Name`/title fields across ALL destinations MUST NOT contain parentheses. Keep titles as short and punchy as possible — a reader should instantly grasp the topic without extra decoration.
 
 ### 1. 毒鸡汤 (Quotes / Random Thoughts)
 **Target:** Append to page `e8f508eb-2d1e-4853-83e3-f77028c6bee2`
@@ -84,6 +92,33 @@ Use these exact Heading 1 blocks with specified background colors, followed by b
    - Bulleted list. Go **deep into the algorithmic design**, architecture mechanics, or taxonomies proposed, instead of high-level generalizations.
 6. `🪖 实验结果` (brown_background)
    - Bulleted list. Must include **concrete metrics, numbers, benchmark scales, statistical conclusions, or tabular comparisons**. Do not use vague statements. (If it is a survey paper, summarize the concrete scales of benchmarks or framework comparisons).
+
+### 3. 理论集合 (Theory / Model Notes)
+**Target:** Create a new page in database `cd06b084-edac-42a4-856a-e085171219d2`
+**Page Properties (ALL are required when creating):**
+- `Name` (title): The name of the theory/model. **No parentheses allowed.** Keep it short and immediately recognizable (e.g., "阿德勒个体心理学", "混沌理论").
+- `Tags` (multi_select): Categorization tag. Existing options include: `心理学`, `学习方法`, `工作`, `经济学`, `计算机`, `火箭学`, `宗教`, `成事心法`, `生物学`, `教育学`. You may also dynamically create new tags as needed.
+- `释义` (rich_text): A concise definition/explanation of the theory. Keep it sharp and insightful.
+- `思考` (rich_text): Deep personal reflection that expands on the 释义 — critically analyze the theory's implications, limitations, and how it connects to life/work. **Must go deep, not superficial.** Deconstruct each key concept in the 释义 chain and explain WHY it matters.
+- `实操` (rich_text): Concrete, actionable advice or exercises derived from this theory. Give the reader a specific thing they can DO today. **If there are multiple points, separate them with `\n` line breaks** for readability in Notion (e.g., "Point 1\nPoint 2\nPoint 3"). Each point should have a bold label prefix.
+- `🐂🍺🈯️` (number): A "coolness" score for the theory (max 5, decimals allowed, e.g., 4.6).
+
+**No page body content is needed.** All information is stored purely in the database properties.
+
+**API Example:**
+```json
+{
+  "parent": { "database_id": "cd06b084-edac-42a4-856a-e085171219d2" },
+  "properties": {
+    "Name": { "title": [{ "text": { "content": "混沌理论" } }] },
+    "Tags": { "multi_select": [{ "name": "生物学" }] },
+    "释义": { "rich_text": [{ "text": { "content": "世界就是由噪声组成的，有序的才是非常态" } }] },
+    "思考": { "rich_text": [{ "text": { "content": "生命只是巧合，混沌即是本质，参考第一性尤为重要" } }] },
+    "实操": { "rich_text": [{ "text": { "content": "面对不确定性时，不要试图预测结果，而是建立对混沌的容忍度..." } }] },
+    "🐂🍺🈯️": { "number": 4.6 }
+  }
+}
+```
 
 ## Workflow: User Confirmation
 

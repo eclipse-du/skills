@@ -60,7 +60,7 @@ Identify 3 "wide-spanning" and "deep" questions about the requirements.
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**LANGUAGE RULE:** If the user communicates in Chinese, this entire document MUST be written in **CHINESE**.
+**LANGUAGE RULE:** You MUST write the entire plan in **CHINESE** if the user asks in Chinese or if the conversation context is Chinese. This is a STRICT requirement.
 
 **Goal:** [One sentence describing what this builds]
 
