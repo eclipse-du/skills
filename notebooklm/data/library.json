@@ -1,0 +1,24 @@
+{
+  "notebooks": {
+    "sinapisai": {
+      "id": "sinapisai",
+      "url": "https://notebooklm.google.com/notebook/f49bad64-aca7-4f29-8bbf-58195fa32451",
+      "name": "SinapisAI",
+      "description": "\u82a5\u5b50\u667a\u80fd\u5b66\u4ef6\u5e73\u53f0\u5546\u4e1a\u8ba1\u5212",
+      "topics": [
+        "\u82a5\u5b50\u667a\u80fd",
+        "\u5b66\u4ef6",
+        "business plan"
+      ],
+      "content_types": [],
+      "use_cases": [],
+      "tags": [],
+      "created_at": "2026-03-09T01:28:44.945659",
+      "updated_at": "2026-03-09T01:28:44.945668",
+      "use_count": 0,
+      "last_used": null
+    }
+  },
+  "active_notebook_id": "sinapisai",
+  "updated_at": "2026-03-09T01:28:44.945672"
+}

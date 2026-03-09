@@ -17,7 +17,7 @@ This skill centralizes and automates routing requests to specific NotebookLM wor
 ## Working with the Cache
 
 ### Current Cache
-Use these Notebook IDs directly when interacting with the NotebookLM MCP (`query_notebook`, `manage_source`, `manage_notebook`):
+Use these Notebook IDs directly when querying or managing sources:
 
 ```yaml
 workspaces:
@@ -42,14 +42,85 @@ workspaces:
 ### Expanding the Cache
 If the user asks to add a new destination or focus (e.g., "把这个新项目加到notebooklm"), **you must update this SKILL.md and SKILL.zh.md file** to append the new ID and keyword routing rules to the YAML cache above.
 
+## Authentication & Cookie Handling
+
+### Architecture
+The skill uses **Playwright (patchright)** to drive a real Chrome browser for accessing NotebookLM. Authentication works through a **two-tier system**:
+
+1. **Windows Host (Headed Login)** — The user runs `auth_manager.py setup` directly on Windows. This launches a real Chrome window where the user logs in to Google. The session state (cookies + localStorage) is saved to `data/browser_state/state.json`.
+
+2. **Docker Container (Headless Queries)** — The `myllm` container reads the saved `state.json` from the shared volume and injects the cookies into a headless Chrome session to perform queries.
+
+> **Key Insight**: Google strictly detects and blocks headless browser logins. You **cannot** perform the initial authentication inside a Docker container. It MUST be done on the Windows host with a real visible browser window.
+
+### First-Time Setup (or Session Expired)
+
+Run this on the **Windows host** (NOT inside Docker):
+```bash
+python scripts/auth_manager.py setup
+```
+- A Chrome window will open. The user logs in to their Google Account.
+- After seeing the NotebookLM home page, the script auto-saves the state.
+- The `state.json` file is saved to `data/browser_state/state.json` on the shared volume.
+
+> **IMPORTANT**: If this command fails with `[WinError 2]`, run `auth_manager.py` directly instead of through `run.py`. The `run.py` wrapper tries to create a virtual environment which may fail on Windows.
+
+### How Cookie Persistence Works
+
+- `auth_manager.py setup` uses a **regular browser context** (not persistent) to avoid Chromium's default third-party cookie blocking.
+- The `config.py` includes Chrome flags `--disable-features=ThirdPartyCookieBlocking,TrackingProtection3pcd` to ensure cookies work.
+- The saved `state.json` contains Playwright-format cookies and localStorage data.
+- When querying from the container, `browser_utils.py` injects these cookies via `context.add_cookies()`.
+- Sessions typically last **7+ days** before needing re-authentication.
+
+### Checking Auth Status
+```bash
+python scripts/auth_manager.py status
+```
+
+### Re-Authentication (if session expired)
+```bash
+python scripts/auth_manager.py clear
+python scripts/auth_manager.py setup
+```
+
+### Troubleshooting Cookie Issues
+
+| Problem | Solution |
+|---|---|
+| "Cookie settings" error during login | Run `auth_manager.py clear` first, then `setup` again |
+| Redirected to Google Sign-in when querying | Session expired — re-run `setup` on Windows host |
+| `[WinError 2]` on Windows | Run `auth_manager.py` directly, not through `run.py` |
+| Missing patchright/chromium | `pip install patchright && patchright install chromium` |
+
 ## Executing Workspace Operations
 
-- **Querying**: Use the MCP `query_notebook` tool to chat with the specific `id` above.
-- **Data Export/Backup**: If you need to back up all sources of a whole workspace, **directly use the MCP tool** `manage_notebook` with `action="export_sources"` and provide an absolute `output_dir` (e.g. `d:\du\code\knowledge\sinapisAI`). **DO NOT** write any extra standalone Node backup scripts yourself.
+### Environment
+- **Windows Host**: For authentication only (`auth_manager.py setup`).
+- **Docker Container (`myllm`)**: For all queries and operations. The code is mounted at `/home/gpu/py/.agent/skills/notebooklm/`.
 
-## Server Location & Configuration
+### 1. Querying a Workspace (inside Docker)
+```bash
+docker exec -w /home/gpu/py/.agent/skills/notebooklm/scripts myllm \
+  python3 ask_question.py --question "Your question here" --notebook-id sinapisai
+```
+Or using the YAML notebook UUID directly:
+```bash
+docker exec -w /home/gpu/py/.agent/skills/notebooklm/scripts myllm \
+  python3 ask_question.py --question "Your question here" \
+  --notebook-id f49bad64-aca7-4f29-8bbf-58195fa32451
+```
 
-The Antigravity NotebookLM MCP server is permanently located at:
-`d:\du\code\user_projects\tools\antigravity-notebooklm-mcp`
+### 2. Managing the Library
+```bash
+docker exec -w /home/gpu/py/.agent/skills/notebooklm/scripts myllm \
+  python3 notebook_manager.py list
+```
 
-If the NotebookLM tools are missing from your environment, or you are instructed to query notebooks but lack the capability, **you must ensure the MCP server is loaded from this path**. If there are environment issues, navigate to this directory to run `npm install` or `npm run build`.
+### 3. Adding a Notebook
+```bash
+docker exec -w /home/gpu/py/.agent/skills/notebooklm/scripts myllm \
+  python3 notebook_manager.py add \
+  --url "https://notebooklm.google.com/notebook/YOUR-ID" \
+  --name "Name" --description "Description" --topics "topic1,topic2"
+```
