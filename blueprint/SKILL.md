@@ -6,10 +6,11 @@ description: >-
   self-contained context brief so a fresh agent can execute it cold.
   Includes adversarial review gate, dependency graph, parallel step
   detection, anti-pattern catalog, and plan mutation protocol.
-  TRIGGER when: user requests a plan, blueprint, or roadmap for a
-  complex multi-PR task, or describes work that needs multiple sessions.
-  DO NOT TRIGGER when: task is completable in a single PR or fewer
-  than 3 tool calls, or user says "just do it".
+  TRIGGER when: user explicitly requests /blueprint or says "blueprint",
+  OR task clearly requires multiple PRs across multiple sessions.
+  DO NOT TRIGGER when: task is completable in a single PR, fewer
+  than 3 tool calls, user says "just do it", or a simpler planner suffices.
+  NOTE: Default planner is writing-plans. Only use blueprint for multi-PR/multi-session scope.
 origin: community
 ---
 

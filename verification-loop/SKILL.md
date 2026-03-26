@@ -1,14 +1,45 @@
-# Verification Loop Skill
+---
+name: verification-loop
+description: Comprehensive verification system for Claude Code sessions. Run after completing features, before PRs, and mandatory before any completion claims. Evidence before assertions always.
+---
 
-A comprehensive verification system for Claude Code sessions.
+# Verification Loop
+
+A comprehensive verification system combining periodic quality checks with mandatory completion gates.
+
+## The Iron Law
+
+```
+NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
+```
+
+If you haven't run the verification command in this message, you cannot claim it passes.
+Claiming work is complete without verification is dishonesty, not efficiency.
 
 ## When to Use
 
-Invoke this skill:
 - After completing a feature or significant code change
 - Before creating a PR
-- When you want to ensure quality gates pass
 - After refactoring
+- **MANDATORY** before ANY completion/success claims
+- **MANDATORY** before committing, pushing, or creating PRs
+- Every 15 minutes in long sessions
+
+## The Gate Function
+
+```
+BEFORE claiming any status or expressing satisfaction:
+
+1. IDENTIFY: What command proves this claim?
+2. RUN: Execute the FULL command (fresh, complete)
+3. READ: Full output, check exit code, count failures
+4. VERIFY: Does output confirm the claim?
+   - If NO: State actual status with evidence
+   - If YES: State claim WITH evidence
+5. ONLY THEN: Make the claim
+
+Skip any step = lying, not verifying
+```
 
 ## Verification Phases
 
@@ -47,8 +78,7 @@ ruff check . 2>&1 | head -30
 # Run tests with coverage
 npm run test -- --coverage 2>&1 | tail -50
 
-# Check coverage threshold
-# Target: 80% minimum
+# Check coverage threshold - Target: 80% minimum
 ```
 
 Report:
@@ -74,10 +104,7 @@ git diff --stat
 git diff HEAD~1 --name-only
 ```
 
-Review each changed file for:
-- Unintended changes
-- Missing error handling
-- Potential edge cases
+Review each changed file for unintended changes, missing error handling, potential edge cases.
 
 ## Output Format
 
@@ -101,20 +128,63 @@ Issues to Fix:
 2. ...
 ```
 
+## Common Failures
+
+| Claim | Requires | Not Sufficient |
+|-------|----------|----------------|
+| Tests pass | Test command output: 0 failures | Previous run, "should pass" |
+| Linter clean | Linter output: 0 errors | Partial check, extrapolation |
+| Build succeeds | Build command: exit 0 | Linter passing, logs look good |
+| Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
+| Agent completed | VCS diff shows changes | Agent reports "success" |
+
+## Red Flags - STOP
+
+- Using "should", "probably", "seems to"
+- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!")
+- About to commit/push/PR without verification
+- Trusting agent success reports
+- Relying on partial verification
+- Thinking "just this once"
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|--------|---------|
+| "Should work now" | RUN the verification |
+| "I'm confident" | Confidence ≠ evidence |
+| "Just this once" | No exceptions |
+| "Linter passed" | Linter ≠ compiler |
+| "Agent said success" | Verify independently |
+| "Partial check is enough" | Partial proves nothing |
+
 ## Continuous Mode
 
 For long sessions, run verification every 15 minutes or after major changes:
-
-```markdown
-Set a mental checkpoint:
 - After completing each function
 - After finishing a component
 - Before moving to next task
 
-Run: /verify
+## Key Patterns
+
+**Tests:**
+```
+OK  [Run test command] [See: 34/34 pass] "All tests pass"
+BAD "Should pass now" / "Looks correct"
 ```
 
-## Integration with Hooks
+**Regression tests (TDD Red-Green):**
+```
+OK  Write -> Run (pass) -> Revert fix -> Run (MUST FAIL) -> Restore -> Run (pass)
+BAD "I've written a regression test" (without red-green verification)
+```
 
-This skill complements PostToolUse hooks but provides deeper verification.
-Hooks catch issues immediately; this skill provides comprehensive review.
+**Build:**
+```
+OK  [Run build] [See: exit 0] "Build passes"
+BAD "Linter passed" (linter doesn't check compilation)
+```
+
+---
+
+**The Bottom Line:** No shortcuts for verification. Run the command. Read the output. THEN claim the result. This is non-negotiable.

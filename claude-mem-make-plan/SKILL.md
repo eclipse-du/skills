@@ -1,6 +1,6 @@
 ---
 name: make-plan
-description: Create a detailed, phased implementation plan with documentation discovery. Use when asked to plan a feature, task, or multi-step implementation — especially before executing with do.
+description: Create a phased implementation plan with documentation discovery. Use ONLY when explicitly asked to use make-plan or claude-mem planning workflow. Default planner is writing-plans.
 ---
 
 # Make Plan

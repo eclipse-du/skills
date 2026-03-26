@@ -15,6 +15,27 @@ This skill ensures all code development follows TDD principles with comprehensiv
 - Adding API endpoints
 - Creating new components
 
+**Exceptions (ask your human partner):**
+- Throwaway prototypes
+- Generated code
+- Configuration files
+
+## The Iron Law
+
+```
+NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+```
+
+Write code before the test? Delete it. Start over.
+
+**No exceptions:**
+- Don't keep it as "reference"
+- Don't "adapt" it while writing tests
+- Don't look at it
+- Delete means delete
+
+Implement fresh from tests. Period.
+
 ## Core Principles
 
 ### 1. Tests BEFORE Code
@@ -46,39 +67,104 @@ ALWAYS write tests first, then implement code to make tests pass.
 - Browser automation
 - UI interactions
 
+## Red-Green-Refactor Cycle
+
+### RED - Write Failing Test
+
+Write one minimal test showing what should happen.
+
+<Good>
+```typescript
+test('retries failed operations 3 times', async () => {
+  let attempts = 0;
+  const operation = () => {
+    attempts++;
+    if (attempts < 3) throw new Error('fail');
+    return 'success';
+  };
+
+  const result = await retryOperation(operation);
+
+  expect(result).toBe('success');
+  expect(attempts).toBe(3);
+});
+```
+Clear name, tests real behavior, one thing
+</Good>
+
+<Bad>
+```typescript
+test('retry works', async () => {
+  const mock = jest.fn()
+    .mockRejectedValueOnce(new Error())
+    .mockRejectedValueOnce(new Error())
+    .mockResolvedValueOnce('success');
+  await retryOperation(mock);
+  expect(mock).toHaveBeenCalledTimes(3);
+});
+```
+Vague name, tests mock not code
+</Bad>
+
+**Requirements:**
+- One behavior per test
+- Clear, descriptive name
+- Real code (no mocks unless unavoidable)
+
+### Verify RED - Watch It Fail
+
+**MANDATORY. Never skip.**
+
+```bash
+npm test path/to/test.test.ts
+```
+
+Confirm:
+- Test fails (not errors)
+- Failure message is expected
+- Fails because feature missing (not typos)
+
+**Test passes?** You're testing existing behavior. Fix test.
+**Test errors?** Fix error, re-run until it fails correctly.
+
+### GREEN - Minimal Code
+
+Write simplest code to pass the test. Don't add features, refactor other code, or "improve" beyond the test.
+
+### Verify GREEN - Watch It Pass
+
+**MANDATORY.**
+
+```bash
+npm test path/to/test.test.ts
+```
+
+Confirm:
+- Test passes
+- Other tests still pass
+- Output pristine (no errors, warnings)
+
+**Test fails?** Fix code, not test.
+**Other tests fail?** Fix now.
+
+### REFACTOR - Clean Up
+
+After green only:
+- Remove duplication
+- Improve names
+- Extract helpers
+
+Keep tests green. Don't add behavior.
+
 ## TDD Workflow Steps
 
 ### Step 1: Write User Journeys
 ```
 As a [role], I want to [action], so that [benefit]
-
-Example:
-As a user, I want to search for markets semantically,
-so that I can find relevant markets even without exact keywords.
 ```
 
 ### Step 2: Generate Test Cases
-For each user journey, create comprehensive test cases:
-
-```typescript
-describe('Semantic Search', () => {
-  it('returns relevant markets for query', async () => {
-    // Test implementation
-  })
-
-  it('handles empty query gracefully', async () => {
-    // Test edge case
-  })
-
-  it('falls back to substring search when Redis unavailable', async () => {
-    // Test fallback behavior
-  })
-
-  it('sorts results by similarity score', async () => {
-    // Test sorting logic
-  })
-})
-```
+For each user journey, create comprehensive test cases.
 
 ### Step 3: Run Tests (They Should Fail)
 ```bash
@@ -87,14 +173,7 @@ npm test
 ```
 
 ### Step 4: Implement Code
-Write minimal code to make tests pass:
-
-```typescript
-// Implementation guided by tests
-export async function searchMarkets(query: string) {
-  // Implementation here
-}
-```
+Write minimal code to make tests pass.
 
 ### Step 5: Run Tests Again
 ```bash
@@ -103,11 +182,7 @@ npm test
 ```
 
 ### Step 6: Refactor
-Improve code quality while keeping tests green:
-- Remove duplication
-- Improve naming
-- Optimize performance
-- Enhance readability
+Improve code quality while keeping tests green.
 
 ### Step 7: Verify Coverage
 ```bash
@@ -131,9 +206,7 @@ describe('Button Component', () => {
   it('calls onClick when clicked', () => {
     const handleClick = jest.fn()
     render(<Button onClick={handleClick}>Click</Button>)
-
     fireEvent.click(screen.getByRole('button'))
-
     expect(handleClick).toHaveBeenCalledTimes(1)
   })
 
@@ -154,7 +227,6 @@ describe('GET /api/markets', () => {
     const request = new NextRequest('http://localhost/api/markets')
     const response = await GET(request)
     const data = await response.json()
-
     expect(response.status).toBe(200)
     expect(data.success).toBe(true)
     expect(Array.isArray(data.data)).toBe(true)
@@ -163,14 +235,11 @@ describe('GET /api/markets', () => {
   it('validates query parameters', async () => {
     const request = new NextRequest('http://localhost/api/markets?limit=invalid')
     const response = await GET(request)
-
     expect(response.status).toBe(400)
   })
 
   it('handles database errors gracefully', async () => {
-    // Mock database failure
-    const request = new NextRequest('http://localhost/api/markets')
-    // Test error handling
+    // Mock database failure, test error handling
   })
 })
 ```
@@ -180,51 +249,13 @@ describe('GET /api/markets', () => {
 import { test, expect } from '@playwright/test'
 
 test('user can search and filter markets', async ({ page }) => {
-  // Navigate to markets page
   await page.goto('/')
   await page.click('a[href="/markets"]')
-
-  // Verify page loaded
   await expect(page.locator('h1')).toContainText('Markets')
-
-  // Search for markets
   await page.fill('input[placeholder="Search markets"]', 'election')
-
-  // Wait for debounce and results
   await page.waitForTimeout(600)
-
-  // Verify search results displayed
   const results = page.locator('[data-testid="market-card"]')
   await expect(results).toHaveCount(5, { timeout: 5000 })
-
-  // Verify results contain search term
-  const firstResult = results.first()
-  await expect(firstResult).toContainText('election', { ignoreCase: true })
-
-  // Filter by status
-  await page.click('button:has-text("Active")')
-
-  // Verify filtered results
-  await expect(results).toHaveCount(3)
-})
-
-test('user can create a new market', async ({ page }) => {
-  // Login first
-  await page.goto('/creator-dashboard')
-
-  // Fill market creation form
-  await page.fill('input[name="name"]', 'Test Market')
-  await page.fill('textarea[name="description"]', 'Test description')
-  await page.fill('input[name="endDate"]', '2025-12-31')
-
-  // Submit form
-  await page.click('button[type="submit"]')
-
-  // Verify success message
-  await expect(page.locator('text=Market created successfully')).toBeVisible()
-
-  // Verify redirect to market page
-  await expect(page).toHaveURL(/\/markets\/test-market/)
 })
 ```
 
@@ -237,9 +268,6 @@ src/
 │   │   ├── Button.tsx
 │   │   ├── Button.test.tsx          # Unit tests
 │   │   └── Button.stories.tsx       # Storybook
-│   └── MarketCard/
-│       ├── MarketCard.tsx
-│       └── MarketCard.test.tsx
 ├── app/
 │   └── api/
 │       └── markets/
@@ -247,7 +275,6 @@ src/
 │           └── route.test.ts         # Integration tests
 └── e2e/
     ├── markets.spec.ts               # E2E tests
-    ├── trading.spec.ts
     └── auth.spec.ts
 ```
 
@@ -279,23 +306,7 @@ jest.mock('@/lib/redis', () => ({
 }))
 ```
 
-### OpenAI Mock
-```typescript
-jest.mock('@/lib/openai', () => ({
-  generateEmbedding: jest.fn(() => Promise.resolve(
-    new Array(1536).fill(0.1) // Mock 1536-dim embedding
-  ))
-}))
-```
-
-## Test Coverage Verification
-
-### Run Coverage Report
-```bash
-npm run test:coverage
-```
-
-### Coverage Thresholds
+## Coverage Thresholds
 ```json
 {
   "jest": {
@@ -311,76 +322,48 @@ npm run test:coverage
 }
 ```
 
-## Common Testing Mistakes to Avoid
+## Common Rationalizations
 
-### ❌ WRONG: Testing Implementation Details
-```typescript
-// Don't test internal state
-expect(component.state.count).toBe(5)
-```
+| Excuse | Reality |
+|--------|---------|
+| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
+| "I'll test after" | Tests passing immediately prove nothing. |
+| "Already manually tested" | Ad-hoc ≠ systematic. No record, can't re-run. |
+| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. |
+| "Need to explore first" | Fine. Throw away exploration, start with TDD. |
+| "TDD will slow me down" | TDD faster than debugging. |
+| "Keep as reference" | You'll adapt it. That's testing after. Delete means delete. |
 
-### ✅ CORRECT: Test User-Visible Behavior
-```typescript
-// Test what users see
-expect(screen.getByText('Count: 5')).toBeInTheDocument()
-```
+## Red Flags - STOP and Start Over
 
-### ❌ WRONG: Brittle Selectors
-```typescript
-// Breaks easily
-await page.click('.css-class-xyz')
-```
+- Code before test
+- Test after implementation
+- Test passes immediately
+- Can't explain why test failed
+- Rationalizing "just this once"
+- "I already manually tested it"
+- "Keep as reference" or "adapt existing code"
 
-### ✅ CORRECT: Semantic Selectors
-```typescript
-// Resilient to changes
-await page.click('button:has-text("Submit")')
-await page.click('[data-testid="submit-button"]')
-```
+**All of these mean: Delete code. Start over with TDD.**
 
-### ❌ WRONG: No Test Isolation
-```typescript
-// Tests depend on each other
-test('creates user', () => { /* ... */ })
-test('updates same user', () => { /* depends on previous test */ })
-```
+## Debugging Integration
 
-### ✅ CORRECT: Independent Tests
-```typescript
-// Each test sets up its own data
-test('creates user', () => {
-  const user = createTestUser()
-  // Test logic
-})
+Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix and prevents regression. Never fix bugs without a test.
 
-test('updates user', () => {
-  const user = createTestUser()
-  // Update logic
-})
-```
+## Verification Checklist
 
-## Continuous Testing
+Before marking work complete:
 
-### Watch Mode During Development
-```bash
-npm test -- --watch
-# Tests run automatically on file changes
-```
+- [ ] Every new function/method has a test
+- [ ] Watched each test fail before implementing
+- [ ] Each test failed for expected reason
+- [ ] Wrote minimal code to pass each test
+- [ ] All tests pass
+- [ ] Output pristine (no errors, warnings)
+- [ ] Tests use real code (mocks only if unavoidable)
+- [ ] Edge cases and errors covered
 
-### Pre-Commit Hook
-```bash
-# Runs before every commit
-npm test && npm run lint
-```
-
-### CI/CD Integration
-```yaml
-# GitHub Actions
-- name: Run Tests
-  run: npm test -- --coverage
-- name: Upload Coverage
-  uses: codecov/codecov-action@v3
-```
+Can't check all boxes? You skipped TDD. Start over.
 
 ## Best Practices
 
@@ -395,15 +378,6 @@ npm test && npm run lint
 9. **Clean Up After Tests** - No side effects
 10. **Review Coverage Reports** - Identify gaps
 
-## Success Metrics
-
-- 80%+ code coverage achieved
-- All tests passing (green)
-- No skipped or disabled tests
-- Fast test execution (< 30s for unit tests)
-- E2E tests cover critical user flows
-- Tests catch bugs before production
-
 ---
 
-**Remember**: Tests are not optional. They are the safety net that enables confident refactoring, rapid development, and production reliability.
+**Remember**: Tests are not optional. Production code -> test exists and failed first. Otherwise -> not TDD. No exceptions without your human partner's permission.
